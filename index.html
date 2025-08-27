@@ -35,7 +35,6 @@
       margin-bottom: 15px;
       font-size: clamp(20px, 5vw, 28px);
     }
-    /* Fixed Input Field */
     input[type="tel"] {
       width: 100%;
       max-width: 350px;
@@ -81,8 +80,12 @@
       width: 100%;
       max-width: 250px;
     }
-    button:hover {
+    button:hover:not(:disabled) {
       background: #43a047;
+    }
+    button:disabled {
+      background: #9e9e9e;
+      cursor: not-allowed;
     }
     .caution {
       color: red;
@@ -98,6 +101,7 @@
     }
     .success { color: green; }
     .error { color: red; }
+
     .table-wrapper {
       overflow-x: auto;
       margin-top: 15px;
@@ -118,6 +122,23 @@
     th {
       background: #f4f4f4;
     }
+
+    /* Loading spinner */
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #4CAF50;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      margin-top: 10px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
     /* Transparent Sticky Footer */
     footer {
       position: fixed;
@@ -147,7 +168,6 @@
       height: 16px;
       fill: #1877F2;
     }
-    /* Mobile adjustments */
     @media (max-width: 480px) {
       .container {
         padding: 15px;
@@ -168,7 +188,7 @@
     <h1>📱 SMS Bomber</h1>
     <input type="tel" id="phone" placeholder="📞 Enter phone number" required />
 
-    <!-- Slider for SMS amount -->
+    <!-- Slider -->
     <div class="slider-container">
       <label for="amount">Number of SMS (Max 100): 
         <span id="amountValue" class="slider-value">1</span>
@@ -176,13 +196,13 @@
       <input type="range" id="amount" min="1" max="100" value="1" oninput="updateAmount(this.value)" />
     </div>
 
-    <button onclick="sendSMS()">🚀 Send SMS</button>
+    <button id="sendBtn" onclick="sendSMS()">🚀 Send SMS</button>
     <p class="caution">⚠️ This tool is for <b>pranks only</b>. Use responsibly!</p>
     <p id="status"></p>
+    <div id="loading" style="display:none;"><div class="spinner"></div></div>
     <div class="table-wrapper" id="results"></div>
   </div>
 
-  <!-- Sticky Footer -->
   <footer>
     <a href="https://www.facebook.com/helloworld5463882" target="_blank">
       <svg class="fb-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
@@ -204,8 +224,11 @@
       const amount = parseInt(document.getElementById("amount").value);
       const statusEl = document.getElementById("status");
       const resultsEl = document.getElementById("results");
+      const loadingEl = document.getElementById("loading");
+      const sendBtn = document.getElementById("sendBtn");
 
       resultsEl.innerHTML = "";
+      statusEl.textContent = "";
 
       if (!phone) {
         statusEl.textContent = "❌ Please enter a phone number.";
@@ -219,43 +242,34 @@
         return;
       }
 
-      statusEl.textContent = "⏳ Sending SMS, please wait...";
+      // Show spinner and disable button
+      loadingEl.style.display = "block";
+      sendBtn.disabled = true;
+      statusEl.textContent = "⏳ Sending SMS...";
       statusEl.className = "";
 
       try {
-        const targetUrl = `https://haji-mix.up.railway.app/api/smsbomber?phone=${phone}&amount=${amount}`;
-        const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`;
-
-        const response = await fetch(proxyUrl);
+        const url = `https://haji-mix.up.railway.app/api/smsbomber?phone=${phone}&amount=${amount}`;
+        const response = await fetch(url);
 
         if (!response.ok) throw new Error("API request failed");
 
         const data = await response.json();
 
+        // Hide spinner and enable button
+        loadingEl.style.display = "none";
+        sendBtn.disabled = false;
+
         if (data.status) {
           statusEl.textContent = `✅ Success! ${data.message}`;
           statusEl.className = "success";
 
-          let tableHTML = `
-            <table>
-              <tr><th>Service</th><th>Status</th></tr>
-          `;
-
+          let tableHTML = `<table><tr><th>Service</th><th>Status</th></tr>`;
           for (const [service, result] of Object.entries(data.details.services)) {
-            tableHTML += `
-              <tr>
-                <td>${service}</td>
-                <td>${result ? "✅ Success" : "❌ Failed"}</td>
-              </tr>
-            `;
+            tableHTML += `<tr><td>${service}</td><td>${result ? "✅ Success" : "❌ Failed"}</td></tr>`;
           }
-
-          tableHTML += `
-              <tr><th>Total Success</th><td>${data.details.total_success}</td></tr>
-              <tr><th>Total Failed</th><td>${data.details.total_failed}</td></tr>
-            </table>
-          `;
-
+          tableHTML += `<tr><th>Total Success</th><td>${data.details.total_success}</td></tr>
+                        <tr><th>Total Failed</th><td>${data.details.total_failed}</td></tr></table>`;
           resultsEl.innerHTML = tableHTML;
         } else {
           statusEl.textContent = "❌ Failed to send SMS. Try again.";
@@ -263,8 +277,9 @@
         }
       } catch (error) {
         console.error("Error:", error);
-        statusEl.textContent =
-          "❌ Network error. Please check your internet connection.";
+        loadingEl.style.display = "none";
+        sendBtn.disabled = false;
+        statusEl.textContent = "❌ Network error. Please check your internet connection.";
         statusEl.className = "error";
       }
     }
