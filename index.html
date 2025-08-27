@@ -13,6 +13,7 @@
       height: 100vh;
       margin: 0;
       background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%);
+      flex-direction: column;
     }
     .container {
       width: 100%;
@@ -98,6 +99,35 @@
     th {
       background: #f4f4f4;
     }
+    /* Transparent Sticky Footer */
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      padding: 10px;
+      font-size: 14px;
+      color: #fff;
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(4px);
+    }
+    footer a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+    .fb-icon {
+      width: 16px;
+      height: 16px;
+      fill: #1877F2; /* Official Facebook blue */
+    }
   </style>
 </head>
 <body>
@@ -118,6 +148,18 @@
     <p id="status"></p>
     <div id="results"></div>
   </div>
+
+  <!-- Sticky Footer -->
+  <footer>
+    <a href="https://www.facebook.com/helloworld5463882" target="_blank">
+      <svg class="fb-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+        <path d="M279.14 288l14.22-92.66h-88.91V127.89c0-25.35 
+        12.42-50.06 52.24-50.06h40.42V6.26S293.3 0 268.09 
+        0c-73.22 0-121.15 44.38-121.15 124.72v70.62H86.41V288h60.53v224h92.66V288z"/>
+      </svg>
+      Made by Homer Rebatis
+    </a>
+  </footer>
 
   <script>
     // Update slider value in real-time
