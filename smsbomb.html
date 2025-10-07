@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Send OTP - Bomba API</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0a192f, #112240);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: #fff;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 30px;
+      width: 90%;
+      max-width: 420px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 10px;
+      color: #64ffda;
+    }
+
+    p {
+      font-size: 0.9rem;
+      color: #ccd6f6;
+      margin-bottom: 25px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 5px;
+      color: #8892b0;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 1rem;
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      transition: all 0.3s ease;
+    }
+
+    input:focus {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background-color: #64ffda;
+      color: #0a192f;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #52e0c4;
+    }
+
+    .response-box {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 10px;
+      display: none;
+      font-size: 0.95rem;
+    }
+
+    .response-success {
+      background-color: rgba(100, 255, 218, 0.1);
+      border: 1px solid #64ffda;
+      color: #64ffda;
+    }
+
+    .response-error {
+      background-color: rgba(255, 100, 100, 0.1);
+      border: 1px solid #ff6464;
+      color: #ff6464;
+    }
+
+    .loader {
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      border-top: 3px solid #64ffda;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      animation: spin 1s linear infinite;
+      display: none;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.8rem;
+      margin-top: 15px;
+      color: #8892b0;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Send OTP</h1>
+    <p>Enter the phone number and time interval to send OTPs via API.</p>
+
+    <div class="input-group">
+      <label for="phone">Phone Number</label>
+      <input type="text" id="phone" placeholder="e.g. 09958229099">
+    </div>
+
+    <div class="input-group">
+      <label for="seconds">Seconds</label>
+      <input type="number" id="seconds" placeholder="e.g. 10">
+    </div>
+
+    <button id="sendBtn">Send OTP</button>
+
+    <div class="loader" id="loader"></div>
+    <div class="response-box" id="responseBox"></div>
+
+    <footer>Powered by Bomba API © 2025</footer>
+  </div>
+
+  <script>
+    const sendBtn = document.getElementById("sendBtn");
+    const loader = document.getElementById("loader");
+    const responseBox = document.getElementById("responseBox");
+
+    sendBtn.addEventListener("click", async () => {
+      const phone = document.getElementById("phone").value.trim();
+      const seconds = document.getElementById("seconds").value.trim();
+
+      responseBox.style.display = "none";
+
+      if (!phone || !seconds) {
+        showResponse(false, "Please enter both phone number and seconds.");
+        return;
+      }
+
+      loader.style.display = "block";
+      sendBtn.disabled = true;
+
+      try {
+        const res = await fetch("https://bomba-vrl7.onrender.com/send-otp", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phone_no: phone,
+            seconds: parseInt(seconds),
+          }),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          showResponse(true, data.message);
+        } else {
+          showResponse(false, data.error || "Request failed.");
+        }
+      } catch (error) {
+        showResponse(false, "An error occurred while sending request.");
+      } finally {
+        loader.style.display = "none";
+        sendBtn.disabled = false;
+      }
+    });
+
+    function showResponse(success, message) {
+      responseBox.style.display = "block";
+      responseBox.className = `response-box ${success ? "response-success" : "response-error"}`;
+      responseBox.textContent = message;
+    }
+  </script>
+</body>
+</html>
