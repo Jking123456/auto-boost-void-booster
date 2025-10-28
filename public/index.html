@@ -3,50 +3,51 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SMS BOMBER</title>
+  <title>SMS Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="styles.css" />
 </head>
 
-<body class="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-indigo-50 flex flex-col items-center p-6">
+<body class="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-indigo-50 flex flex-col items-center px-4 py-10">
 
   <!-- HEADER -->
-  <header class="text-center mb-10">
-    <div class="flex flex-col items-center space-y-2">
-      <div class="flex items-center space-x-2">
-        <div class="bg-indigo-600 text-white p-2 rounded-lg shadow">
-          📱
-        </div>
-        <h1 class="text-4xl font-extrabold text-gray-800 tracking-tight">SMS BOMBER</h1>
-      </div>
-      <p class="text-gray-500 mt-1 text-sm md:text-base">
-        Easily send verification codes & monitor live API usage.
-      </p>
+  <header class="text-center mb-10 animate-fadeIn">
+    <div class="flex items-center justify-center space-x-3 mb-2">
+      <div class="bg-indigo-600 text-white p-3 rounded-xl shadow-md text-2xl">📲</div>
+      <h1 class="text-4xl font-extrabold text-gray-800 tracking-tight">SMS Dashboard</h1>
     </div>
+    <p class="text-gray-500 text-sm md:text-base">
+      Easily send verification codes & monitor real-time API usage.
+    </p>
   </header>
 
   <!-- MAIN CONTENT -->
-  <main class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-8">
+  <main class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-8 items-start animate-fadeIn">
 
-    <!-- SMS FORM CARD -->
+    <!-- SEND SMS CARD -->
     <section class="card">
-      <h2 class="card-title">Send a Massive Message</h2>
+      <h2 class="card-title">Send a Message</h2>
+      <p class="text-gray-500 text-sm mb-6">Enter a phone number and how many times to send the message.</p>
 
-      <form id="otpForm" class="space-y-5 mt-4">
+      <form id="otpForm" class="space-y-5">
+        <!-- PHONE -->
         <div>
           <label for="phoneNumber" class="label">Phone Number</label>
-          <input id="phoneNumber" type="tel" placeholder="e.g., 09123456789" maxlength="11" required class="input" />
+          <input id="phoneNumber" type="tel" placeholder="09123456789" maxlength="11" required class="input" />
         </div>
 
+        <!-- AMOUNT -->
         <div>
           <label for="amount" class="label">Amount</label>
-          <input id="amount" type="number" placeholder="e.g., 1" min="1" value="1" required class="input" />
+          <input id="amount" type="number" placeholder="1" min="1" value="1" required class="input" />
         </div>
 
+        <!-- MESSAGE AREA -->
         <div id="messageArea" class="min-h-[2.5rem] text-center"></div>
 
-        <button id="sendButton" type="submit" class="btn-primary w-full">
-          <span>Send SMS</span>
+        <!-- BUTTON -->
+        <button id="sendButton" type="submit" class="btn-primary w-full text-lg">
+          Send SMS
         </button>
       </form>
     </section>
@@ -59,8 +60,7 @@
           <span>API Statistics</span>
         </h2>
         <button id="refreshStats" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center space-x-1 transition">
-          <span>Refresh</span>
-          <span>↻</span>
+          <span>Refresh</span><span>↻</span>
         </button>
       </div>
 
@@ -69,8 +69,8 @@
   </main>
 
   <!-- FOOTER -->
-  <footer class="mt-12 text-center text-xs text-gray-400">
-    <p>© 2025 SMS BOMBER Made with ❤️ by <span class="font-semibold text-indigo-600">Homer Rebatis</span>.</p>
+  <footer class="mt-12 text-center text-xs text-gray-400 animate-fadeIn">
+    <p>© 2025 SMS Dashboard — Built with ❤️ using <span class="font-semibold text-indigo-600">Vercel + Tailwind</span></p>
   </footer>
 
   <script src="script.js"></script>
