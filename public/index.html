@@ -3,42 +3,67 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Send Verification SMS</title>
+  <title>SMS BOMBER</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="styles.css" />
 </head>
 
-<body class="bg-gray-50 flex flex-col items-center justify-center p-4 space-y-8">
+<body class="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-indigo-50 flex flex-col items-center justify-center p-6">
 
-  <!-- SMS Card -->
-  <div class="w-full max-w-sm bg-white shadow-xl rounded-xl p-8 space-y-6">
-    <div class="text-center">
-      <h1 class="text-3xl font-bold text-gray-800">Send Verification Code</h1>
-      <p class="mt-2 text-sm text-gray-500">Enter the phone number and amount.</p>
-    </div>
+  <!-- Header -->
+  <header class="text-center mb-10">
+    <h1 class="text-4xl font-extrabold text-gray-800 tracking-tight">📱 SMS BOMBER</h1>
+    <p class="text-gray-500 mt-2 text-sm md:text-base">Send verification codes and monitor API stats easily.</p>
+  </header>
 
-    <form id="otpForm" class="space-y-5">
-      <div>
-        <label for="phoneNumber" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-        <input id="phoneNumber" type="tel" placeholder="09123456789" required maxlength="11" class="input-field" />
+  <!-- Main Container -->
+  <main class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+    
+    <!-- SMS Form Card -->
+    <section class="bg-white shadow-xl rounded-2xl p-8 space-y-6 transition-transform transform hover:-translate-y-1 hover:shadow-2xl">
+      <h2 class="text-2xl font-semibold text-gray-800 border-b pb-2">Send Verification Code</h2>
+
+      <form id="otpForm" class="space-y-5">
+        <!-- Phone Input -->
+        <div>
+          <label for="phoneNumber" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+          <input id="phoneNumber" type="tel" placeholder="e.g., 09123456789" required maxlength="11"
+            class="input-field" />
+        </div>
+
+        <!-- Amount Input -->
+        <div>
+          <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+          <input id="amount" type="number" placeholder="e.g., 1" required min="1" value="1"
+            class="input-field" />
+        </div>
+
+        <!-- Message Area -->
+        <div id="messageArea" class="min-h-[2.5rem] text-center"></div>
+
+        <!-- Submit -->
+        <button id="sendButton" type="submit" class="btn-primary w-full">Send SMS</button>
+      </form>
+    </section>
+
+    <!-- Stats Card -->
+    <section class="bg-white shadow-xl rounded-2xl p-8 space-y-6 transition-transform transform hover:-translate-y-1 hover:shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-semibold text-gray-800">📈 API Statistics</h2>
+        <button id="refreshStats" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition">
+          Refresh ↻
+        </button>
       </div>
 
-      <div>
-        <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
-        <input id="amount" type="number" placeholder="1" required min="1" value="1" class="input-field" />
-      </div>
+      <div id="statsContent" class="text-center text-gray-500">Loading stats...</div>
+    </section>
 
-      <div id="messageArea" class="min-h-[2.5rem]"></div>
+  </main>
 
-      <button id="sendButton" type="submit" class="btn-primary">Send SMS</button>
-    </form>
-  </div>
-
-  <!-- Stats Section -->
-  <div id="statsSection" class="w-full max-w-md bg-white shadow-md rounded-xl p-6 space-y-4">
-    <h2 class="text-2xl font-bold text-gray-800 text-center">📈 SMS API Stats</h2>
-    <div id="statsContent" class="text-center text-gray-500">Loading stats...</div>
-  </div>
+  <!-- Footer -->
+  <footer class="mt-10 text-center text-sm text-gray-400">
+    <p>Built with ❤️ using <span class="font-semibold text-indigo-600">Vercel + Tailwind</span></p>
+  </footer>
 
   <script src="script.js"></script>
 </body>
