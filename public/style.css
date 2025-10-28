@@ -1,165 +1,130 @@
-/* General Reset */
+/* Reset and base styles */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html, body {
-  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-  background: linear-gradient(135deg, #f8faff, #eef2ff);
-  color: #333;
+body {
+  font-family: "Poppins", "Segoe UI", sans-serif;
+  background: #f5f6fa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   min-height: 100vh;
 }
 
-/* Header */
-.header {
-  text-align: center;
-  padding: 2rem 1rem 1rem;
-}
-
-.header-icon {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.header h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin-bottom: 0.3rem;
-}
-
-.subtitle {
-  font-size: 0.95rem;
-  color: #555;
-}
-
-/* Container */
-.container {
-  max-width: 950px;
-  margin: 2rem auto;
-  padding: 0 1rem;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-}
-
-@media (max-width: 768px) {
-  .container {
-    grid-template-columns: 1fr;
-  }
+/* Wrapper */
+.wrapper {
+  padding: 1rem;
+  width: 100%;
+  max-width: 420px;
 }
 
 /* Card */
 .card {
   background: #fff;
-  border-radius: 12px;
-  padding: 1.8rem;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 18px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  padding: 2.5rem 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
 }
 
 .card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
-.card h2 {
-  font-size: 1.3rem;
-  margin-bottom: 1rem;
-  color: #222;
+/* Icon */
+.icon {
+  font-size: 2.8rem;
+  color: #4f46e5;
+  background: #eef0ff;
+  width: 65px;
+  height: 65px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Form Styling */
+/* Title & Subtitle */
+.title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1f1f1f;
+  margin-bottom: 0.4rem;
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+/* Form */
 .form {
+  text-align: left;
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 1rem;
 }
 
 .form label {
   font-weight: 600;
-  color: #444;
   font-size: 0.9rem;
+  color: #333;
 }
 
 .form input {
-  padding: 0.7rem 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 10px;
   font-size: 1rem;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .form input:focus {
-  border-color: #4c6ef5;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(76,110,245,0.2);
 }
 
 /* Message Area */
 .message-area {
   min-height: 24px;
-  font-size: 0.9rem;
   text-align: center;
-  color: #4c6ef5;
-  font-weight: 500;
+  font-size: 0.9rem;
+  color: #4f46e5;
+  margin-top: -5px;
 }
 
 /* Button */
 button {
-  background: #4c6ef5;
+  background: #4f46e5;
   color: #fff;
+  font-size: 1rem;
   font-weight: 600;
-  padding: 0.8rem 1rem;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
+  padding: 0.9rem;
   cursor: pointer;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
   transition: all 0.3s ease;
 }
 
 button:hover {
-  background: #3b5bdb;
+  background: #4338ca;
 }
 
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-/* Stats */
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.refresh {
-  background: none;
-  border: none;
-  color: #4c6ef5;
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: color 0.3s;
-}
-
-.refresh:hover {
-  color: #364fc7;
-}
-
-.stats {
-  margin-top: 1rem;
-  font-size: 0.95rem;
-  line-height: 1.6;
-}
-
-/* Footer */
-.footer {
-  text-align: center;
-  padding: 2rem 1rem;
-  color: #666;
-  font-size: 0.85rem;
-  margin-top: 2rem;
 }
