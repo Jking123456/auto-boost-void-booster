@@ -4,6 +4,7 @@ const amountInput = document.getElementById('amount');
 const messageArea = document.getElementById('messageArea');
 const sendButton = document.getElementById('sendButton');
 const statsContent = document.getElementById('statsContent');
+const refreshBtn = document.getElementById('refreshStats');
 
 function displayMessage(type, message) {
   const colors = {
@@ -12,7 +13,7 @@ function displayMessage(type, message) {
     info: 'bg-blue-100 border-blue-400 text-blue-700',
   };
   messageArea.innerHTML = `
-    <div class="p-3 border rounded-lg text-sm ${colors[type]}">${message}</div>
+    <div class="p-3 border rounded-lg text-sm ${colors[type]} animate-fadeIn">${message}</div>
   `;
 }
 
@@ -47,7 +48,7 @@ async function sendOTP(event) {
 
     if (response.ok) {
       displayMessage('success', `✅ SMS sent successfully! Message: ${result.message || 'Success'}`);
-      fetchStats(); // Refresh stats after sending
+      fetchStats();
     } else {
       displayMessage('error', result.message || 'Failed to send SMS.');
     }
@@ -61,6 +62,7 @@ async function sendOTP(event) {
 }
 
 async function fetchStats() {
+  statsContent.innerHTML = '<p class="text-gray-400 italic">Fetching stats...</p>';
   try {
     const response = await fetch('/api/stats');
     const data = await response.json();
@@ -71,22 +73,21 @@ async function fetchStats() {
     }
 
     const { totalRequests, endpoints, lastUpdated } = data.data;
+    const updatedDate = new Date(lastUpdated).toLocaleString();
 
-    const endpointsHtml = Object.entries(endpoints)
+    const endpointGrid = Object.entries(endpoints)
       .map(([name, count]) => `
-        <div class="flex justify-between border-b py-1">
-          <span>${name}</span>
-          <span class="font-semibold">${count}</span>
+        <div class="flex justify-between border-b border-gray-100 py-2">
+          <span class="text-gray-600">${name}</span>
+          <span class="font-semibold text-indigo-700">${count}</span>
         </div>
       `).join('');
 
-    const updatedDate = new Date(lastUpdated).toLocaleString();
-
     statsContent.innerHTML = `
-      <div class="space-y-3">
-        <p><strong>Total Requests:</strong> ${totalRequests}</p>
-        <div class="text-left">${endpointsHtml}</div>
-        <p class="text-xs text-gray-400">Last Updated: ${updatedDate}</p>
+      <div class="space-y-3 animate-fadeIn">
+        <p class="font-medium text-lg text-gray-700">Total Requests: <span class="font-bold text-indigo-600">${totalRequests}</span></p>
+        <div class="text-left divide-y divide-gray-100">${endpointGrid}</div>
+        <p class="text-xs text-gray-400 mt-2">Last Updated: ${updatedDate}</p>
       </div>
     `;
   } catch (error) {
@@ -95,5 +96,14 @@ async function fetchStats() {
   }
 }
 
+// Small fade animation
+const style = document.createElement('style');
+style.innerHTML = `
+  @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+  .animate-fadeIn { animation: fadeIn 0.4s ease-in-out; }
+`;
+document.head.appendChild(style);
+
 form.addEventListener('submit', sendOTP);
+refreshBtn.addEventListener('click', fetchStats);
 window.addEventListener('DOMContentLoaded', fetchStats);
