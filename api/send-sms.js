@@ -10,38 +10,29 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Fetch the API Key dynamically
+    // Step 1: Get a fresh API key
     const keyResponse = await fetch("https://sms-api-key.vercel.app/api/generate?count=1");
-    
-    if (!keyResponse.ok) {
-      // Handle non-200 responses from the key generator API
-      const errorText = await keyResponse.text();
-      return res.status(keyResponse.status).json({ error: `Failed to fetch API key: ${errorText}` });
-    }
-
     const keyData = await keyResponse.json();
-    // Assuming the key is the first element of the returned array
-    const apiKey = keyData[0]; 
+    const apiKey = keyData[0]; // API returns an array with one key
 
     if (!apiKey) {
-        return res.status(500).json({ error: "API Key generation returned an empty result." });
+      throw new Error("Failed to retrieve API key");
     }
 
-    // 2. Send the SMS using the dynamically fetched key
-    const response = await fetch("https://toshismsbmbapi.up.railway.app/api/send-sms", {
+    // Step 2: Send SMS using the fetched key
+    const smsResponse = await fetch("https://toshismsbmbapi.up.railway.app/api/send-sms", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // Use the dynamically fetched API Key
-        "X-API-Key": apiKey 
+        "X-API-Key": apiKey
       },
       body: JSON.stringify({ phoneNumber, amount })
     });
 
-    const data = await response.json();
-    return res.status(response.status).json(data);
+    const data = await smsResponse.json();
+    return res.status(smsResponse.status).json(data);
+
   } catch (error) {
-    // Catch network or parsing errors from either fetch request
     return res.status(500).json({ error: error.message });
   }
 }
