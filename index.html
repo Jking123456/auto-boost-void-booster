@@ -18,7 +18,7 @@
       padding: 30px;
       border-radius: 12px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      width: 320px;
+      width: 340px;
     }
     h2 {
       text-align: center;
@@ -47,6 +47,21 @@
       text-align: center;
       font-size: 14px;
     }
+    #stats {
+      margin-top: 15px;
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 14px;
+      color: #333;
+      display: none;
+    }
+    .refresh {
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
   </style>
 </head>
 <body>
@@ -56,13 +71,43 @@
     <input type="number" id="amount" placeholder="Enter Amount" min="1" value="1" />
     <button id="sendBtn">Send</button>
     <p id="status"></p>
+
+    <h3 style="text-align:center;margin-top:20px;">📊 Live Stats</h3>
+    <div id="stats"></div>
+    <div class="refresh" id="refreshInfo"></div>
   </div>
 
   <script>
+    const status = document.getElementById("status");
+    const statsDiv = document.getElementById("stats");
+    const refreshInfo = document.getElementById("refreshInfo");
+
+    // Function to fetch and display stats
+    async function loadStats() {
+      try {
+        const res = await fetch("/api/stats");
+        const data = await res.json();
+        if (res.ok) {
+          statsDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+          statsDiv.style.display = "block";
+          const now = new Date().toLocaleTimeString();
+          refreshInfo.textContent = "Last updated: " + now + " (auto refresh every 30s)";
+        } else {
+          statsDiv.innerHTML = `<p style="color:red;">❌ Failed to fetch stats</p>`;
+        }
+      } catch (err) {
+        statsDiv.innerHTML = `<p style="color:red;">⚠️ Error: ${err.message}</p>`;
+      }
+    }
+
+    // Load stats immediately and every 30 seconds
+    loadStats();
+    setInterval(loadStats, 30000);
+
+    // Send SMS button logic
     document.getElementById("sendBtn").addEventListener("click", async () => {
       const phoneNumber = document.getElementById("phoneNumber").value.trim();
       const amount = document.getElementById("amount").value.trim();
-      const status = document.getElementById("status");
 
       if (!phoneNumber) return status.textContent = "Please enter phone number.";
 
@@ -78,6 +123,7 @@
         const data = await response.json();
         if (response.ok) {
           status.textContent = "✅ Message sent successfully!";
+          loadStats(); // ⬅️ Refresh stats immediately after sending SMS
         } else {
           status.textContent = "❌ Failed: " + (data.error || JSON.stringify(data));
         }
