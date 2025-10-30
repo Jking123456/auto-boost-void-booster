@@ -5,132 +5,174 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Send SMS</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
+      font-family: "Poppins", Arial, sans-serif;
+      background: linear-gradient(135deg, #007bff, #6610f2);
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
+      margin: 0;
     }
     .container {
-      background: #fff;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
       padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      width: 340px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      width: 360px;
+      text-align: center;
+      animation: fadeIn 0.4s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(10px);}
+      to {opacity: 1; transform: translateY(0);}
     }
     h2 {
-      text-align: center;
-      color: #333;
+      color: #222;
+      margin-bottom: 10px;
+      font-weight: 600;
     }
-    input, button {
+    input {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       margin-top: 10px;
-      border-radius: 6px;
       border: 1px solid #ccc;
-      font-size: 16px;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: 0.2s;
+    }
+    input:focus {
+      border-color: #007bff;
+      outline: none;
+      box-shadow: 0 0 5px rgba(0,123,255,0.3);
     }
     button {
-      background: #007bff;
-      color: white;
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      background: linear-gradient(90deg, #007bff, #6610f2);
       border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 500;
       cursor: pointer;
-      transition: 0.3s;
+      transition: 0.3s ease;
     }
     button:hover {
-      background: #0056b3;
+      transform: scale(1.02);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
     #status {
-      margin-top: 10px;
-      text-align: center;
+      margin-top: 12px;
       font-size: 14px;
+      font-weight: 500;
     }
     #stats {
-      margin-top: 15px;
-      background: #f9fafb;
-      border-radius: 8px;
-      padding: 10px;
-      font-size: 14px;
-      color: #333;
+      margin-top: 20px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: left;
       display: none;
+      border: 1px solid #e1e1e1;
+    }
+    .stat-line {
+      margin: 6px 0;
+      font-size: 14px;
+    }
+    .stat-line span {
+      font-weight: 600;
+      color: #000;
     }
     .refresh {
-      text-align: center;
+      margin-top: 6px;
       font-size: 12px;
-      color: #666;
-      margin-top: 5px;
+      color: #777;
+      text-align: center;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Send SMS</h2>
+    <h2>📩 SMS Bomber</h2>
     <input type="text" id="phoneNumber" placeholder="Enter Phone Number" />
     <input type="number" id="amount" placeholder="Enter Amount" min="1" value="1" />
-    <button id="sendBtn">Send</button>
+    <button id="sendBtn">Send SMS</button>
     <p id="status"></p>
 
-    <h3 style="text-align:center;margin-top:20px;">📊 Live Stats</h3>
+    <h3 style="margin-top:25px; color:#333;">📊 Live Stats</h3>
     <div id="stats"></div>
     <div class="refresh" id="refreshInfo"></div>
   </div>
 
   <script>
-    const status = document.getElementById("status");
+    const statusEl = document.getElementById("status");
     const statsDiv = document.getElementById("stats");
     const refreshInfo = document.getElementById("refreshInfo");
 
-    // Function to fetch and display stats
+    // Convert JSON stats to readable HTML text
+    function renderStats(data) {
+      statsDiv.innerHTML = "";
+      for (const [key, value] of Object.entries(data)) {
+        const line = document.createElement("div");
+        line.className = "stat-line";
+        line.innerHTML = `<span>${key.replace(/_/g, " ")}:</span> ${value}`;
+        statsDiv.appendChild(line);
+      }
+      statsDiv.style.display = "block";
+    }
+
+    // Fetch stats
     async function loadStats() {
       try {
         const res = await fetch("/api/stats");
         const data = await res.json();
         if (res.ok) {
-          statsDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-          statsDiv.style.display = "block";
-          const now = new Date().toLocaleTimeString();
-          refreshInfo.textContent = "Last updated: " + now + " (auto refresh every 30s)";
+          renderStats(data);
+          refreshInfo.textContent = "Last updated: " + new Date().toLocaleTimeString() + " (auto refresh every 30s)";
         } else {
-          statsDiv.innerHTML = `<p style="color:red;">❌ Failed to fetch stats</p>`;
+          statsDiv.innerHTML = "<p style='color:red;'>❌ Failed to load stats</p>";
         }
       } catch (err) {
         statsDiv.innerHTML = `<p style="color:red;">⚠️ Error: ${err.message}</p>`;
       }
     }
 
-    // Load stats immediately and every 30 seconds
-    loadStats();
-    setInterval(loadStats, 30000);
-
-    // Send SMS button logic
+    // Send SMS logic
     document.getElementById("sendBtn").addEventListener("click", async () => {
       const phoneNumber = document.getElementById("phoneNumber").value.trim();
-      const amount = document.getElementById("amount").value.trim();
+      const amount = parseInt(document.getElementById("amount").value);
 
-      if (!phoneNumber) return status.textContent = "Please enter phone number.";
+      if (!phoneNumber) return (statusEl.textContent = "⚠️ Please enter phone number.");
 
-      status.textContent = "Sending...";
-
+      statusEl.textContent = "Sending...";
       try {
-        const response = await fetch("/api/send-sms", {
+        const res = await fetch("/api/send-sms", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phoneNumber, amount: Number(amount) })
+          body: JSON.stringify({ phoneNumber, amount }),
         });
+        const data = await res.json();
 
-        const data = await response.json();
-        if (response.ok) {
-          status.textContent = "✅ Message sent successfully!";
-          loadStats(); // ⬅️ Refresh stats immediately after sending SMS
+        if (res.ok) {
+          statusEl.textContent = "✅ Message sent successfully!";
+          loadStats(); // refresh stats after send
         } else {
-          status.textContent = "❌ Failed: " + (data.error || JSON.stringify(data));
+          statusEl.textContent = "❌ Failed: " + (data.error || JSON.stringify(data));
         }
       } catch (err) {
-        status.textContent = "⚠️ Error: " + err.message;
+        statusEl.textContent = "⚠️ Error: " + err.message;
       }
     });
+
+    // Load stats on start + auto-refresh every 30s
+    loadStats();
+    setInterval(loadStats, 30000);
   </script>
 </body>
 </html>
