@@ -110,69 +110,77 @@
     <div class="refresh" id="refreshInfo"></div>
   </div>
 
-  <script>
-    const statusEl = document.getElementById("status");
-    const statsDiv = document.getElementById("stats");
-    const refreshInfo = document.getElementById("refreshInfo");
+<script>
+  const statusEl = document.getElementById("status");
+  const statsDiv = document.getElementById("stats");
+  const refreshInfo = document.getElementById("refreshInfo");
 
-    // Convert JSON stats to readable HTML text
-    function renderStats(data) {
-      statsDiv.innerHTML = "";
-      for (const [key, value] of Object.entries(data)) {
-        const line = document.createElement("div");
-        line.className = "stat-line";
-        line.innerHTML = `<span>${key.replace(/_/g, " ")}:</span> ${value}`;
-        statsDiv.appendChild(line);
-      }
-      statsDiv.style.display = "block";
-    }
+  // Recursively render nested objects
+  function renderStats(data, indent = 0) {
+    const indentSpace = "&nbsp;".repeat(indent * 4);
+    let html = "";
 
-    // Fetch stats
-    async function loadStats() {
-      try {
-        const res = await fetch("/api/stats");
-        const data = await res.json();
-        if (res.ok) {
-          renderStats(data);
-          refreshInfo.textContent = "Last updated: " + new Date().toLocaleTimeString() + " (auto refresh every 30s)";
-        } else {
-          statsDiv.innerHTML = "<p style='color:red;'>❌ Failed to load stats</p>";
-        }
-      } catch (err) {
-        statsDiv.innerHTML = `<p style="color:red;">⚠️ Error: ${err.message}</p>`;
+    for (const [key, value] of Object.entries(data)) {
+      if (typeof value === "object" && value !== null) {
+        html += `<div class="stat-line">${indentSpace}<b>${key.replace(/_/g, " ")}:</b></div>`;
+        html += renderStats(value, indent + 1);
+      } else {
+        html += `<div class="stat-line">${indentSpace}<b>${key.replace(/_/g, " ")}:</b> ${value}</div>`;
       }
     }
+    return html;
+  }
 
-    // Send SMS logic
-    document.getElementById("sendBtn").addEventListener("click", async () => {
-      const phoneNumber = document.getElementById("phoneNumber").value.trim();
-      const amount = parseInt(document.getElementById("amount").value);
+  async function loadStats() {
+    try {
+      const res = await fetch("/api/stats");
+      const data = await res.json();
 
-      if (!phoneNumber) return (statusEl.textContent = "⚠️ Please enter phone number.");
-
-      statusEl.textContent = "Sending...";
-      try {
-        const res = await fetch("/api/send-sms", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phoneNumber, amount }),
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-          statusEl.textContent = "✅ Message sent successfully!";
-          loadStats(); // refresh stats after send
-        } else {
-          statusEl.textContent = "❌ Failed: " + (data.error || JSON.stringify(data));
-        }
-      } catch (err) {
-        statusEl.textContent = "⚠️ Error: " + err.message;
+      if (res.ok) {
+        statsDiv.innerHTML = renderStats(data);
+        statsDiv.style.display = "block";
+        refreshInfo.textContent =
+          "Last updated: " +
+          new Date().toLocaleTimeString() +
+          " (auto refresh every 30s)";
+      } else {
+        statsDiv.innerHTML = "<p style='color:red;'>❌ Failed to load stats</p>";
       }
-    });
+    } catch (err) {
+      statsDiv.innerHTML = `<p style="color:red;">⚠️ Error: ${err.message}</p>`;
+    }
+  }
 
-    // Load stats on start + auto-refresh every 30s
-    loadStats();
-    setInterval(loadStats, 30000);
-  </script>
+  document.getElementById("sendBtn").addEventListener("click", async () => {
+    const phoneNumber = document.getElementById("phoneNumber").value.trim();
+    const amount = parseInt(document.getElementById("amount").value);
+
+    if (!phoneNumber) return (statusEl.textContent = "⚠️ Please enter phone number.");
+
+    statusEl.textContent = "Sending...";
+    try {
+      const res = await fetch("/api/send-sms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phoneNumber, amount }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        statusEl.textContent = "✅ Message sent successfully!";
+        loadStats(); // refresh stats immediately after sending
+      } else {
+        statusEl.textContent = "❌ Failed: " + (data.error || JSON.stringify(data));
+      }
+    } catch (err) {
+      statusEl.textContent = "⚠️ Error: " + err.message;
+    }
+  });
+
+  // Auto refresh
+  loadStats();
+  setInterval(loadStats, 30000);
+</script>
+  
 </body>
 </html>
