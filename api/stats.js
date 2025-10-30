@@ -2,7 +2,7 @@ export default async function handler(req, res) {
   try {
     const response = await fetch("https://toshismsbmbapi.up.railway.app/api/stats", {
       headers: {
-        "X-API-Key": "65b4edb0643bedb83606abf34c6c044bc825bcc2492960b4a16873586d5286aa"
+        "X-API-Key": "91f23a73be5b70b7ff1bdf76d7aa09caf3a9afd0d25bf70794e11dfbba33d19b"
       }
     });
 
