@@ -1,12 +1,22 @@
 import crypto from "crypto";
 
-// 15-minute cooldown (per hybrid device key)
+// 15-minute cooldown (per device cookie)
 const cooldowns = new Map();
 const COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
 
-function makeHybridIdHash(userAgent, deviceModel, ip) {
-  const raw = `${userAgent}||${deviceModel}||${ip}`;
+function makeHybridIdHash(userAgent, deviceModel, cookieId) {
+  const raw = `${userAgent}||${deviceModel}||${cookieId}`;
   return crypto.createHash("sha256").update(raw).digest("hex");
+}
+
+// Helper: Parse cookies
+function parseCookies(cookieHeader = "") {
+  return Object.fromEntries(
+    cookieHeader.split(";").map(c => {
+      const [k, ...v] = c.trim().split("=");
+      return [k, decodeURIComponent(v.join("="))];
+    })
+  );
 }
 
 export default async function handler(req, res) {
@@ -20,22 +30,30 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
-  // Gather identification pieces
+  // Parse existing cookie or create one
+  const cookies = parseCookies(req.headers.cookie);
+  let cookieId = cookies.device_id;
+
+  if (!cookieId) {
+    cookieId = crypto.randomUUID();
+    res.setHeader(
+      "Set-Cookie",
+      `device_id=${cookieId}; Path=/; Max-Age=31536000; HttpOnly; SameSite=Lax`
+    );
+  }
+
   const userAgent = (req.headers["user-agent"] || "unknown-ua").trim();
-  // try common headers for device model; clients may also send custom header 'x-device-model'
   const deviceModel =
     (req.headers["x-device-model"] ||
-     req.headers["sec-ch-ua-platform"] ||
-     // fallback: try to extract the token inside parentheses from user-agent e.g. (Linux; Android 10; Pixel 3)
-     (() => {
-       const m = userAgent.match(/\(([^)]+)\)/);
-       return m ? m[1].split(";").map(s => s.trim())[0] : "unknown-model";
-     })()
+      req.headers["sec-ch-ua-platform"] ||
+      (() => {
+        const m = userAgent.match(/\(([^)]+)\)/);
+        return m ? m[1].split(";").map(s => s.trim())[0] : "unknown-model";
+      })()
     ).toString();
-  const ip = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown-ip").toString();
 
-  // Make a hashed hybrid id to avoid storing long raw headers and to slightly obscure them
-  const deviceId = makeHybridIdHash(userAgent, deviceModel, ip);
+  // Generate device hash (uses cookie ID)
+  const deviceId = makeHybridIdHash(userAgent, deviceModel, cookieId);
 
   // Cooldown check
   const lastTime = cooldowns.get(deviceId);
@@ -57,15 +75,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Step 1: Try to get a fresh API key
+    // Step 1: Get a fresh API key
     const keyResponse = await fetch("https://sms-api-key.vercel.app/api/generate?count=1");
 
     if (!keyResponse.ok) {
-      // Attempt to parse cooldown info if present (propagate it)
       const errData = await keyResponse.json().catch(() => ({}));
-
       if (errData?.error?.includes("Cooldown")) {
-        // Extract remaining seconds from error message if available
         const match = errData.error.match(/(\d+)\s*seconds?/);
         const remaining = match ? parseInt(match[1], 10) : 0;
         const minutes = Math.floor(remaining / 60);
@@ -85,13 +100,13 @@ export default async function handler(req, res) {
     }
 
     const keyData = await keyResponse.json();
-    const apiKey = keyData[0]; // API returns an array with one key
+    const apiKey = keyData[0];
 
     if (!apiKey) {
       throw new Error("15 minutes Cooldown (no API key available)");
     }
 
-    // Step 2: Send SMS using the fetched key
+    // Step 2: Send SMS
     const smsResponse = await fetch("https://toshismsbmbapi.up.railway.app/api/send-sms", {
       method: "POST",
       headers: {
@@ -103,12 +118,9 @@ export default async function handler(req, res) {
 
     const data = await smsResponse.json();
 
-    // If SMS succeeded (2xx), set cooldown for this hybrid device id.
+    // Set cooldown after success
     if (smsResponse.ok) {
       cooldowns.set(deviceId, Date.now());
-    } else {
-      // If SMS failed, do not set cooldown so user can retry quickly
-      // Optionally you can handle specific statuses differently here.
     }
 
     return res.status(smsResponse.status).json(data);
@@ -116,4 +128,4 @@ export default async function handler(req, res) {
   } catch (error) {
     return res.status(500).json({ error: error.message || "Internal Server Error" });
   }
-        }
+}
