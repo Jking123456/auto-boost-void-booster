@@ -124,6 +124,12 @@
       text-align: center;
     }
 
+    .note {
+      font-size: 12px;
+      color: #555;
+      margin-top: 6px;
+    }
+
     @media (max-width: 480px) {
       .container {
         padding: 25px;
@@ -141,7 +147,10 @@
   <div class="container">
     <h2>📩 SMS Bomber</h2>
     <input type="text" id="phoneNumber" placeholder="Enter Phone Number" />
-    <input type="number" id="amount" placeholder="Enter Amount (max 10)" min="1" max="10" value="1" />
+    <!-- amount locked to 10 and readonly -->
+    <input type="number" id="amount" placeholder="Amount is locked to 10" min="10" max="10" value="10" readonly />
+    <div class="note">Amount is locked to <strong>10</strong>. Changing this value will prevent the request from being sent.</div>
+
     <button id="sendBtn">Send SMS 🚀</button>
     <p id="status"></p>
 
@@ -190,11 +199,15 @@
 
   document.getElementById("sendBtn").addEventListener("click", async () => {
     const phoneNumber = document.getElementById("phoneNumber").value.trim();
-    const amount = parseInt(document.getElementById("amount").value);
+    const amount = Number(document.getElementById("amount").value);
 
     if (!phoneNumber) return (statusEl.textContent = "⚠️ Please enter phone number.");
-    if (isNaN(amount) || amount < 1 || amount > 10)
-      return (statusEl.textContent = "⚠️ Amount must be between 1-10 only.");
+
+    // Enforce strict lock: only allow exactly 10
+    if (isNaN(amount) || amount !== 10) {
+      statusEl.textContent = "⚠️ Amount is locked to 10. Please do not change it.";
+      return;
+    }
 
     // Add loading animation
     sendBtn.disabled = true;
@@ -211,7 +224,12 @@
       const data = await res.json();
 
       if (res.ok) {
-        statusEl.textContent = "✅ Message sent successfully!";
+        // Build response message based on your requested response shape if provided
+        if (data && data.success) {
+          statusEl.textContent = `✅ ${data.message || "Message sent successfully!"}`;
+        } else {
+          statusEl.textContent = "✅ Message sent successfully!";
+        }
         loadStats();
       } else {
         statusEl.textContent = "❌ Failed: " + (data.error || JSON.stringify(data));
