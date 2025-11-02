@@ -100,7 +100,6 @@
       button { font-size: 15px; }
     }
 
-    /* Loading Overlay */
     .spinner {
       width: 26px;
       height: 26px;
@@ -151,7 +150,6 @@
     }
 
     .loading-card {
-      position: relative; /* Added for unmute button positioning */
       padding: 22px 45px;
       border-radius: 14px;
       display: flex;
@@ -189,33 +187,6 @@
       background: #000;
       object-fit: cover;
     }
-
-    /* Unmute Button */
-    #unmuteBtn {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      background: rgba(0, 0, 0, 0.6);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 12px;
-      cursor: pointer;
-      z-index: 1000;
-      font-size: 14px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-    }
-
-    #unmuteBtn.visible {
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    #unmuteBtn:hover {
-      background: rgba(0, 0, 0, 0.8);
-    }
   </style>
 </head>
 
@@ -237,9 +208,7 @@
       <div class="sending-text" id="progressText">Preparing to send...</div>
       <div style="font-size:12px; color:#fff;">Made with ❤️ by Henry Ross</div>
       <!-- Video Player -->
-      <video id="videoPlayer" autoplay muted playsinline></video>
-      <!-- Unmute Button -->
-      <button id="unmuteBtn">🔊 Unmute</button>
+      <video id="videoPlayer" muted playsinline controls></video>
     </div>
   </div>
 
@@ -249,7 +218,6 @@
     const overlay = document.getElementById("loadingOverlay");
     const progressEl = document.getElementById("progressText");
     const videoPlayer = document.getElementById("videoPlayer");
-    const unmuteBtn = document.getElementById("unmuteBtn");
 
     // Fetch random Shoti video
     async function loadShotiVideo() {
@@ -258,8 +226,7 @@
         const data = await res.json();
         if (data.link) {
           videoPlayer.src = data.link;
-          videoPlayer.play();
-          // When video ends, fetch next
+          // autoplay removed; user must press play manually
           videoPlayer.onended = loadShotiVideo;
         }
       } catch (err) {
@@ -267,23 +234,11 @@
       }
     }
 
-    // Start showing Shoti videos when overlay appears
+    // Start showing Shoti videos as soon as loading overlay appears
     const observer = new MutationObserver(() => {
       if (overlay.classList.contains("active")) loadShotiVideo();
     });
     observer.observe(overlay, { attributes: true, attributeFilter: ["class"] });
-
-    // Show unmute button when video is ready
-    videoPlayer.addEventListener("loadeddata", () => {
-      unmuteBtn.classList.add("visible");
-    });
-
-    // When user clicks the button, unmute the video
-    unmuteBtn.addEventListener("click", () => {
-      videoPlayer.muted = false;
-      videoPlayer.play();
-      unmuteBtn.classList.remove("visible");
-    });
 
     // Cooldown system
     let cooldownEl = document.createElement("div");
