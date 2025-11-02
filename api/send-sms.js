@@ -1,8 +1,9 @@
 import crypto from "crypto";
 
-// 15-minute cooldown (per device cookie)
-const cooldowns = new Map();
-const COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
+// 15-minute cooldown (per device & per phone number)
+const cooldowns = new Map();         // device → timestamp
+const numberCooldowns = new Map();   // phoneNumber → timestamp
+const COOLDOWN_MS = 15 * 60 * 1000;  // 15 minutes
 
 function makeHybridIdHash(userAgent, deviceModel, cookieId) {
   const raw = `${userAgent}||${deviceModel}||${cookieId}`;
@@ -31,13 +32,17 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
+  // Lock amount to 50
+  if (Number(amount) !== 50) {
+    return res.status(400).json({ error: "Amount is locked to 50 only." });
+  }
+
   // Parse existing cookie or create one
   const cookies = parseCookies(req.headers.cookie);
   let cookieId = cookies.device_id;
 
   if (!cookieId) {
     cookieId = crypto.randomUUID();
-    // set cookie; Max-Age 1 year, HttpOnly, SameSite Lax
     res.setHeader(
       "Set-Cookie",
       `device_id=${cookieId}; Path=/; Max-Age=31536000; HttpOnly; SameSite=Lax`
@@ -56,29 +61,42 @@ export default async function handler(req, res) {
 
   // Generate device hash (uses cookie ID)
   const deviceId = makeHybridIdHash(userAgent, deviceModel, cookieId);
-
-  // Cooldown check
-  const lastTime = cooldowns.get(deviceId);
   const now = Date.now();
 
-  if (lastTime && now - lastTime < COOLDOWN_MS) {
-    const remaining = Math.ceil((COOLDOWN_MS - (now - lastTime)) / 1000);
-    const minutes = Math.floor(remaining / 60);
-    const seconds = remaining % 60;
+  // === ⏳ Check Device Cooldown ===
+  const lastDeviceUse = cooldowns.get(deviceId);
+  if (lastDeviceUse && now - lastDeviceUse < COOLDOWN_MS) {
+    const remaining = Math.ceil((COOLDOWN_MS - (now - lastDeviceUse)) / 1000);
+    const mins = Math.floor(remaining / 60);
+    const secs = remaining % 60;
     const readable =
-      minutes > 0
-        ? `${minutes} minute${minutes > 1 ? "s" : ""} and ${seconds} second${seconds !== 1 ? "s" : ""}`
-        : `${seconds} second${seconds !== 1 ? "s" : ""}`;
-
+      mins > 0
+        ? `${mins} minute${mins > 1 ? "s" : ""} and ${secs} second${secs !== 1 ? "s" : ""}`
+        : `${secs} second${secs !== 1 ? "s" : ""}`;
     return res.status(429).json({
-      error: `Please wait ${readable} before using this service again.`,
+      error: `Device cooldown active. Please wait ${readable} before sending again.`,
+      remainingSeconds: remaining
+    });
+  }
+
+  // === 📱 Check Phone Number Cooldown ===
+  const lastNumberUse = numberCooldowns.get(phoneNumber);
+  if (lastNumberUse && now - lastNumberUse < COOLDOWN_MS) {
+    const remaining = Math.ceil((COOLDOWN_MS - (now - lastNumberUse)) / 1000);
+    const mins = Math.floor(remaining / 60);
+    const secs = remaining % 60;
+    const readable =
+      mins > 0
+        ? `${mins} minute${mins > 1 ? "s" : ""} and ${secs} second${secs !== 1 ? "s" : ""}`
+        : `${secs} second${secs !== 1 ? "s" : ""}`;
+    return res.status(429).json({
+      error: `This phone number is on cooldown. Please wait ${readable} before sending again.`,
       remainingSeconds: remaining
     });
   }
 
   try {
-    // Compose new GET endpoint using provided phone and amount
-    // NOTE: phoneNumber and amount are URL-encoded to be safe
+    // Compose new GET endpoint using provided phone and locked amount
     const phoneParam = encodeURIComponent(String(phoneNumber));
     const amountParam = encodeURIComponent(String(amount));
     const downstreamUrl = `https://haji-mix-api.gleeze.com/api/smsbomber?phone=${phoneParam}&amount=${amountParam}`;
@@ -87,20 +105,18 @@ export default async function handler(req, res) {
       method: "GET",
       headers: {
         "Accept": "application/json"
-        // No API key header — per request we've removed API key usage
       }
     });
 
     const downstream = await smsResponse.json().catch(() => ({}));
 
     if (smsResponse.ok) {
-      // Set cooldown on successful 2xx response
+      // ✅ Set cooldowns for both device and phone number
       cooldowns.set(deviceId, Date.now());
+      numberCooldowns.set(phoneNumber, Date.now());
 
-      // If downstream already uses shape like you provided, return it directly.
-      // Otherwise, try to normalize into that shape.
+      // Return normalized response
       if (typeof downstream.status === "boolean" && downstream.details) {
-        // Return downstream as-is, but ensure we include a timestamp and phone/amount echo
         const enriched = {
           ...downstream,
           details: {
@@ -113,35 +129,28 @@ export default async function handler(req, res) {
         return res.status(200).json(enriched);
       }
 
-      // Normalization fallback: attempt to map fields into your example shape
       const services = (downstream.services || downstream.details?.services) || {};
       const total_success =
-        Number(downstream.total_success ?? downstream.successCount ?? downstream.successes ?? 0);
+        Number(downstream.total_success ?? downstream.successCount ?? 0);
       const total_failed =
-        Number(downstream.total_failed ?? downstream.failCount ?? downstream.failures ?? 0);
+        Number(downstream.total_failed ?? downstream.failCount ?? 0);
 
-      const responsePayload = {
+      return res.status(200).json({
         status: true,
         message: downstream.message ?? "SMS bombing completed using multiple services.",
         details: {
-          total_success: total_success,
-          total_failed: total_failed,
-          services: services
-        },
-        meta: {
+          total_success,
+          total_failed,
+          services,
           requestedPhone: String(phoneNumber),
           requestedAmount: Number(amount),
           timestamp: new Date().toISOString()
         }
-      };
-
-      return res.status(200).json(responsePayload);
+      });
     } else {
-      // Propagate downstream non-2xx response (helpful for debugging)
       return res.status(smsResponse.status).json(downstream);
     }
   } catch (error) {
     return res.status(500).json({ error: error.message || "Internal Server Error" });
   }
-               }
-      
+}
