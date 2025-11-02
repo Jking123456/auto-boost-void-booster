@@ -105,7 +105,7 @@ export default async function handler(req, res) {
     const apiKey = keyData[0];
 
     if (!apiKey) {
-      throw new Error("15 minutes Cooldown (no API key available)");
+      throw new Error("Service not available right now!");
     }
 
     // Step 2: Send SMS
