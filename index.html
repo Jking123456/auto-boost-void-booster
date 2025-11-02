@@ -220,22 +220,38 @@
     const progressEl = document.getElementById("progressText");
     const videoPlayer = document.getElementById("videoPlayer");
 
-    // Fetch random Shoti video
-    async function loadShotiVideo() {
-      try {
-        const res = await fetch("/api/shoti");
-        const data = await res.json();
-        if (data.link) {
-          videoPlayer.src = data.link;
-          videoPlayer.play();
-          // When video ends, fetch next
-          videoPlayer.onended = loadShotiVideo;
-        }
-      } catch (err) {
-        console.error("Failed to load Shoti video:", err);
-      }
-    }
+// Fetch random Shoti video
+async function loadShotiVideo() {
+  try {
+    const res = await fetch("/api/shoti");
+    const data = await res.json();
 
+    if (data && data.link) {
+      // Test the video URL before assigning it
+      const test = await fetch(data.link, { method: "HEAD" });
+
+      if (test.ok && test.headers.get("content-type")?.includes("video")) {
+        videoPlayer.src = data.link;
+        videoPlayer.load();
+        videoPlayer.play().catch(() => {
+          console.warn("Autoplay blocked or unsupported format.");
+        });
+        videoPlayer.onended = loadShotiVideo;
+      } else {
+        console.warn("Invalid video source, retrying...");
+        loadShotiVideo(); // retry another one
+      }
+    } else {
+      console.warn("No video link found, retrying...");
+      loadShotiVideo();
+    }
+  } catch (err) {
+    console.error("Failed to load Shoti video:", err);
+    setTimeout(loadShotiVideo, 2000); // retry after 2s
+  }
+}
+    
+    
     // Start showing Shoti videos as soon as loading overlay appears
     const observer = new MutationObserver(() => {
       if (overlay.classList.contains("active")) loadShotiVideo();
