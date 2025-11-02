@@ -212,38 +212,46 @@
       <video id="videoPlayer" autoplay muted playsinline></video>
     </div>
   </div>
-<script>
+  <script>
   const statusEl = document.getElementById("status");
   const sendBtn = document.getElementById("sendBtn");
   const overlay = document.getElementById("loadingOverlay");
   const progressEl = document.getElementById("progressText");
   const videoPlayer = document.getElementById("videoPlayer");
 
-  let userInteracted = false; // track if user clicked once
+  let userInteracted = false;
 
-  // Load random video from Shoti API
+  // Function to safely set a working video source
   async function loadShotiVideo() {
     try {
       const res = await fetch("https://haji-mix-api.gleeze.com/api/shoti?stream=false");
       const data = await res.json();
-      if (data.link) {
-        videoPlayer.src = data.link;
-        videoPlayer.muted = !userInteracted;
-        // Start playback safely
-        const playPromise = videoPlayer.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(() => {}); // prevent autoplay rejection
+
+      if (data && data.link) {
+        // Ensure it's a direct mp4 stream link
+        let videoURL = data.link;
+        if (!videoURL.endsWith(".mp4")) {
+          // Try forcing mp4 version
+          videoURL = videoURL.replace("/video/", "/api/video/") + ".mp4";
         }
-        // Fetch next when current ends
+
+        // Assign and play
+        videoPlayer.src = videoURL;
+        videoPlayer.load();
+        videoPlayer.muted = !userInteracted;
+        const playPromise = videoPlayer.play();
+        if (playPromise) playPromise.catch(() => {});
         videoPlayer.onended = loadShotiVideo;
+      } else {
+        console.warn("Invalid video data:", data);
       }
     } catch (err) {
-      console.error("Failed to load Shoti video:", err);
-      setTimeout(loadShotiVideo, 3000); // retry
+      console.error("Video load error:", err);
+      setTimeout(loadShotiVideo, 2000);
     }
   }
 
-  // Watch overlay visibility → load videos when active
+  // Monitor overlay to trigger video
   const observer = new MutationObserver(() => {
     if (overlay.classList.contains("active")) {
       loadShotiVideo();
@@ -253,7 +261,7 @@
   });
   observer.observe(overlay, { attributes: true, attributeFilter: ["class"] });
 
-  // --- Cooldown system ---
+  // Cooldown display
   let cooldownEl = document.createElement("div");
   cooldownEl.style.marginTop = "10px";
   cooldownEl.style.color = "#ff4747";
@@ -267,7 +275,6 @@
     clearInterval(cooldownTimer);
     sendBtn.disabled = true;
     cooldownEl.style.display = "block";
-
     function updateDisplay() {
       const m = Math.floor(seconds / 60);
       const s = seconds % 60;
@@ -282,12 +289,10 @@
       }
       seconds--;
     }
-
     updateDisplay();
     cooldownTimer = setInterval(updateDisplay, 1000);
   }
 
-  // Format JSON response nicely
   function objectToPlainText(obj, indent = 0) {
     const pad = "  ".repeat(indent);
     if (obj === null) return pad + "null";
@@ -302,7 +307,7 @@
       .join("\n");
   }
 
-  // --- Main button click handler ---
+  // Main send button
   sendBtn.addEventListener("click", async () => {
     const phoneNumber = document.getElementById("phoneNumber").value.trim();
     const amount = Number(document.getElementById("amount").value);
@@ -312,18 +317,15 @@
       return;
     }
 
-    // Mark user as interacted → allow sound
     userInteracted = true;
     videoPlayer.muted = false;
     videoPlayer.play().catch(() => {});
 
-    // Show loading overlay immediately
     overlay.classList.add("active");
     sendBtn.disabled = true;
     statusEl.textContent = "";
     progressEl.textContent = "Starting to send messages...";
 
-    // Simulate sending progress
     let fakeCount = 0;
     const fakeProgress = setInterval(() => {
       if (fakeCount < amount) {
@@ -333,13 +335,11 @@
     }, 300);
 
     try {
-      // Actual backend call
       const res = await fetch("/api/send-sms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phoneNumber, amount }),
       });
-
       const data = await res.json();
       clearInterval(fakeProgress);
 
@@ -358,13 +358,13 @@
       progressEl.textContent = "❌ Failed to send messages.";
       statusEl.textContent = "Error: " + err.message;
     } finally {
-      // Hide overlay after 1s
       setTimeout(() => overlay.classList.remove("active"), 1000);
       if (cooldownEl.style.display === "none") {
         sendBtn.disabled = false;
       }
     }
   });
-</script>
+  </script>
+  
 </body>
 </html>
