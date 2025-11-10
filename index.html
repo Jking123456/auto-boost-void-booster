@@ -121,7 +121,7 @@
 
     <div class="form-group">
       <label for="amount">Amount (lock to 50)</label>
-      <input id="amount" type="number" value="50" min="50" max="50" />
+      <input id="amount" type="number" value="50" min="50" />
     </div>
 
     <div class="form-group consent">
@@ -191,7 +191,8 @@
 
       if (!phoneNumber) return showStatus('❗ Please enter a phone number.', 'error');
       if (!/^[0-9]+$/.test(phoneNumber)) return showStatus('❗ Phone number must contain only digits.', 'error');
-      if (isNaN(amount) || amount < 50 || amount > 50) return showStatus('❗ Amount must be 1 (demo limit).', 'error');
+      if (isNaN(amount) || amount < 1) return showStatus('❗ Please enter a valid amount (must be 50 or higher).', 'error');
+      
       if (!consentCheckbox.checked) return showStatus('❗ You must confirm consent.', 'error');
 
       startButton.disabled = true;
