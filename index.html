@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Send SMS BOMB</title>
+  <title>Send SMS</title>
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: "Poppins", Arial, sans-serif;
       background: linear-gradient(135deg, #007bff, #6610f2);
@@ -14,28 +16,26 @@
       align-items: center;
       height: 100vh;
       margin: 0;
-      padding: 20px;
     }
-
     .container {
       background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(12px);
+      backdrop-filter: blur(10px);
       border-radius: 16px;
       padding: 30px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-      width: 100%;
-      max-width: 380px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      width: 360px;
       text-align: center;
       animation: fadeIn 0.4s ease-in-out;
     }
-
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {opacity: 0; transform: translateY(10px);}
+      to {opacity: 1; transform: translateY(0);}
     }
-
-    h2 { color: #222; margin-bottom: 15px; font-weight: 600; }
-
+    h2 {
+      color: #222;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
     input {
       width: 100%;
       padding: 12px;
@@ -45,13 +45,11 @@
       font-size: 15px;
       transition: 0.2s;
     }
-
     input:focus {
       border-color: #007bff;
       outline: none;
-      box-shadow: 0 0 6px rgba(0, 123, 255, 0.3);
+      box-shadow: 0 0 5px rgba(0,123,255,0.3);
     }
-
     button {
       width: 100%;
       padding: 12px;
@@ -64,301 +62,125 @@
       font-weight: 500;
       cursor: pointer;
       transition: 0.3s ease;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
     }
-
     button:hover {
       transform: scale(1.02);
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
-
     #status {
       margin-top: 12px;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 500;
-      text-align: left;
-      background: #f8f9fa;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-      white-space: pre-wrap;
-      overflow-wrap: break-word;
-      min-height: 48px;
-      color: #111;
-      max-height: 220px;
-      overflow-y: auto;
     }
-
-    .note { font-size: 12px; color: #555; margin-top: 6px; }
-
-    @media (max-width: 480px) {
-      .container { padding: 25px; }
-      h2 { font-size: 20px; }
-      button { font-size: 15px; }
-    }
-
-    /* Loading Overlay */
-    .spinner {
-      width: 26px;
-      height: 26px;
-      border: 3px solid rgba(255, 255, 255, 0.2);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.9s linear infinite, glow 1.8s ease-in-out infinite alternate;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes glow {
-      from { box-shadow: 0 0 6px rgba(255, 255, 255, 0.3); }
-      to { box-shadow: 0 0 15px rgba(255, 255, 255, 0.9); }
-    }
-
-    .sending-text {
-      font-weight: 600;
-      background: linear-gradient(90deg, #007bff, #6610f2);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      letter-spacing: 0.6px;
-      animation: pulseText 1.6s ease-in-out infinite;
-    }
-
-    @keyframes pulseText {
-      0%, 100% { opacity: 0.7; }
-      50% { opacity: 1; }
-    }
-
-    .loading-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.35);
-      backdrop-filter: blur(5px);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      z-index: 999;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-    }
-
-    .loading-overlay.active {
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    .loading-card {
-      padding: 22px 45px;
-      border-radius: 14px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      font-family: "Poppins", sans-serif;
-      color: #fff;
-      font-size: 16px;
-      animation: fadeInUp 0.3s ease;
-      background: transparent;
-      box-shadow: 0 0 20px rgba(255,0,0,0.7),
-                  0 0 30px rgba(0,255,0,0.7),
-                  0 0 40px rgba(0,0,255,0.7);
-      animation: rgbGlow 2s infinite alternate;
-    }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes rgbGlow {
-      0% { box-shadow: 0 0 20px rgba(255,0,0,0.7), 0 0 30px rgba(0,255,0,0.7), 0 0 40px rgba(0,0,255,0.7); }
-      50% { box-shadow: 0 0 30px rgba(255,0,255,0.8), 0 0 40px rgba(0,255,255,0.8), 0 0 50px rgba(255,255,0,0.8); }
-      100% { box-shadow: 0 0 20px rgba(0,255,255,0.7), 0 0 30px rgba(255,0,255,0.7), 0 0 40px rgba(255,255,0,0.7); }
-    }
-
-    /* Video inside loading overlay */
-    #videoPlayer {
-      width: 280px;
-      height: 480px;
-      border-radius: 12px;
+    #stats {
       margin-top: 20px;
-      background: #000;
-      object-fit: cover;
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: left;
+      display: none;
+      border: 1px solid #e1e1e1;
+    }
+    .stat-line {
+      margin: 6px 0;
+      font-size: 14px;
+    }
+    .stat-line span {
+      font-weight: 600;
+      color: #000;
+    }
+    .refresh {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #777;
+      text-align: center;
     }
   </style>
 </head>
-
 <body>
   <div class="container">
     <h2>📩 SMS Bomber</h2>
     <input type="text" id="phoneNumber" placeholder="Enter Phone Number" />
-    <input type="number" id="amount" value="10" min="10" max="10" readonly />
-    <div class="note">Amount is locked to <strong>10</strong>.</div>
+    <input type="number" id="amount" placeholder="Enter Amount" min="1" value="1" />
+    <button id="sendBtn">Send SMS 🚀</button>
+    <p id="status"></p>
 
-    <button id="sendBtn">Bombahin mo na yah! 🚀</button>
-    <div id="status"></div>
+    <h3 style="margin-top:25px; color:#333;">📊 Live API Stats</h3>
+    <div id="stats"></div>
+    <div class="refresh" id="refreshInfo"></div>
   </div>
 
-  <!-- Loading Overlay -->
-  <div class="loading-overlay" id="loadingOverlay">
-    <div class="loading-card">
-      <div class="spinner"></div>
-      <div class="sending-text" id="progressText">Preparing to send...</div>
-      <div style="font-size:12px; color:#fff;">Made with ❤️ by Henry Ross</div>
-      <!-- Video Player -->
-      <video id="videoPlayer" autoplay></video>
-    </div>
-  </div>
+<script>
+  const statusEl = document.getElementById("status");
+  const statsDiv = document.getElementById("stats");
+  const refreshInfo = document.getElementById("refreshInfo");
 
-  <script>
-    const statusEl = document.getElementById("status");
-    const sendBtn = document.getElementById("sendBtn");
-    const overlay = document.getElementById("loadingOverlay");
-    const progressEl = document.getElementById("progressText");
-    const videoPlayer = document.getElementById("videoPlayer");
+  // Recursively render nested objects
+  function renderStats(data, indent = 0) {
+    const indentSpace = "&nbsp;".repeat(indent * 4);
+    let html = "";
 
-// Fetch random Shoti video
-async function loadShotiVideo() {
-  try {
-    const res = await fetch("/api/shoti");
-    const data = await res.json();
-
-    if (data && data.link) {
-      // Test the video URL before assigning it
-      const test = await fetch(data.link, { method: "HEAD" });
-
-      if (test.ok && test.headers.get("content-type")?.includes("video")) {
-        videoPlayer.src = data.link;
-        videoPlayer.load();
-        videoPlayer.play().catch(() => {
-          console.warn("Autoplay blocked or unsupported format.");
-        });
-        videoPlayer.onended = loadShotiVideo;
+    for (const [key, value] of Object.entries(data)) {
+      if (typeof value === "object" && value !== null) {
+        html += `<div class="stat-line">${indentSpace}<b>${key.replace(/_/g, " ")}:</b></div>`;
+        html += renderStats(value, indent + 1);
       } else {
-        console.warn("Invalid video source, retrying...");
-        loadShotiVideo(); // retry another one
+        html += `<div class="stat-line">${indentSpace}<b>${key.replace(/_/g, " ")}:</b> ${value}</div>`;
       }
-    } else {
-      console.warn("No video link found, retrying...");
-      loadShotiVideo();
     }
-  } catch (err) {
-    console.error("Failed to load Shoti video:", err);
-    setTimeout(loadShotiVideo, 2000); // retry after 2s
+    return html;
   }
-}
-    
-    
-    // Start showing Shoti videos as soon as loading overlay appears
-    const observer = new MutationObserver(() => {
-      if (overlay.classList.contains("active")) loadShotiVideo();
-    });
-    observer.observe(overlay, { attributes: true, attributeFilter: ["class"] });
 
-    // Cooldown system
-    let cooldownEl = document.createElement("div");
-    cooldownEl.style.marginTop = "10px";
-    cooldownEl.style.color = "#ff4747";
-    cooldownEl.style.fontWeight = "600";
-    cooldownEl.style.fontSize = "14px";
-    cooldownEl.style.display = "none";
-    statusEl.parentElement.appendChild(cooldownEl);
+  async function loadStats() {
+    try {
+      const res = await fetch("/api/stats");
+      const data = await res.json();
 
-    let cooldownTimer = null;
-    function startCooldown(seconds) {
-      clearInterval(cooldownTimer);
-      sendBtn.disabled = true;
-      cooldownEl.style.display = "block";
-
-      function updateDisplay() {
-        const m = Math.floor(seconds / 60);
-        const s = seconds % 60;
-        cooldownEl.textContent = `⏳ Cooldown: ${m.toString().padStart(2, "0")}:${s
-          .toString()
-          .padStart(2, "0")}`;
-        if (seconds <= 0) {
-          clearInterval(cooldownTimer);
-          cooldownEl.style.display = "none";
-          sendBtn.disabled = false;
-          return;
-        }
-        seconds--;
+      if (res.ok) {
+        statsDiv.innerHTML = renderStats(data);
+        statsDiv.style.display = "block";
+        refreshInfo.textContent =
+          "Last updated: " +
+          new Date().toLocaleTimeString() +
+          " (auto refresh every 30s)";
+      } else {
+        statsDiv.innerHTML = "<p style='color:red;'>❌ Failed to load stats</p>";
       }
-
-      updateDisplay();
-      cooldownTimer = setInterval(updateDisplay, 1000);
+    } catch (err) {
+      statsDiv.innerHTML = `<p style="color:red;">⚠️ Error: ${err.message}</p>`;
     }
+  }
 
-    function objectToPlainText(obj, indent = 0) {
-      const pad = "  ".repeat(indent);
-      if (obj === null) return pad + "null";
-      if (typeof obj !== "object") return pad + String(obj);
-      if (Array.isArray(obj)) return obj.map((v) => pad + `- ${v}`).join("\n");
-      return Object.entries(obj)
-        .map(([k, v]) =>
-          typeof v === "object"
-            ? pad + `${k}:\n` + objectToPlainText(v, indent + 1)
-            : pad + `${k}: ${v}`
-        )
-        .join("\n");
+  document.getElementById("sendBtn").addEventListener("click", async () => {
+    const phoneNumber = document.getElementById("phoneNumber").value.trim();
+    const amount = parseInt(document.getElementById("amount").value);
+
+    if (!phoneNumber) return (statusEl.textContent = "⚠️ Please enter phone number.");
+
+    statusEl.textContent = "Sending...";
+    try {
+      const res = await fetch("/api/send-sms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phoneNumber, amount }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        statusEl.textContent = "✅ Message sent successfully!";
+        loadStats(); // refresh stats immediately after sending
+      } else {
+        statusEl.textContent = "❌ Failed: " + (data.error || JSON.stringify(data));
+      }
+    } catch (err) {
+      statusEl.textContent = "⚠️ Error: " + err.message;
     }
+  });
 
-    document.getElementById("sendBtn").addEventListener("click", async () => {
-      const phoneNumber = document.getElementById("phoneNumber").value.trim();
-      const amount = Number(document.getElementById("amount").value);
-
-      if (!phoneNumber) {
-        statusEl.textContent = "⚠️ Please enter phone number.";
-        return;
-      }
-
-      overlay.classList.add("active");
-      sendBtn.disabled = true;
-      statusEl.textContent = "";
-      progressEl.textContent = "Starting to send messages...";
-
-      let fakeCount = 0;
-      const fakeProgress = setInterval(() => {
-        if (fakeCount < amount) {
-          fakeCount++;
-          progressEl.textContent = `Sending ${fakeCount} of ${amount}...`;
-        }
-      }, 300);
-
-      try {
-        const res = await fetch("/api/send-sms", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phoneNumber, amount }),
-        });
-
-        const data = await res.json();
-        clearInterval(fakeProgress);
-
-        if (res.ok) {
-          progressEl.textContent = "✅ All messages sent successfully!";
-        } else if (res.status === 429 && data.remainingSeconds) {
-          progressEl.textContent = "⚠️ You're on cooldown.";
-          startCooldown(data.remainingSeconds);
-        } else {
-          progressEl.textContent = `❌ Error: ${data.error || "Unknown error"}`;
-        }
-
-        statusEl.textContent = objectToPlainText(data);
-      } catch (err) {
-        clearInterval(fakeProgress);
-        progressEl.textContent = "❌ Failed to send messages.";
-        statusEl.textContent = "Error: " + err.message;
-      } finally {
-        setTimeout(() => overlay.classList.remove("active"), 1000);
-        if (cooldownEl.style.display === "none") {
-          sendBtn.disabled = false;
-        }
-      }
-    });
-  </script>
+  // Auto refresh
+  loadStats();
+  setInterval(loadStats, 30000);
+</script>
+  
 </body>
 </html>
