@@ -157,7 +157,8 @@
 
     async function fetchStats() {
       try {
-        const res = await fetch('https://toshismsbombapi.up.railway.app/api/stats');
+        // Use backend proxy to avoid CORS
+        const res = await fetch('/api/stats');
         const data = await res.json();
         if (!data.success) throw new Error("Failed to load stats");
 
@@ -179,9 +180,7 @@
     }
 
     function startAutoRefresh() {
-      // Stop existing interval (if already running)
       if (statsInterval) clearInterval(statsInterval);
-      // Start fetching stats every 1 second
       statsInterval = setInterval(fetchStats, 1000);
       fetchStats(); // Run immediately once
     }
@@ -192,7 +191,7 @@
 
       if (!phoneNumber) return showStatus('❗ Please enter a phone number.', 'error');
       if (!/^[0-9]+$/.test(phoneNumber)) return showStatus('❗ Phone number must contain only digits.', 'error');
-      if (isNaN(amount) || amount < 50 || amount > 50) return showStatus('❗ Amount must be 50', 'error');
+      if (isNaN(amount) || amount < 50 || amount > 50) return showStatus('❗ Amount must be 1 (demo limit).', 'error');
       if (!consentCheckbox.checked) return showStatus('❗ You must confirm consent.', 'error');
 
       startButton.disabled = true;
@@ -221,7 +220,7 @@
       }
     });
 
-    // Optional: stop refreshing when user leaves page
+    // Stop refreshing when user leaves page
     window.addEventListener('beforeunload', () => {
       if (statsInterval) clearInterval(statsInterval);
     });
