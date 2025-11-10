@@ -1,176 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Toshi's Bomb API</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f4f4f4;
-            margin: 0;
-        }
-        .container {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            width: 90%;
-            max-width: 500px;
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #555;
-        }
-        input[type="text"],
-        input[type="number"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box; /* Include padding and border in the element's total width and height */
-            font-size: 16px;
-        }
-        button {
-            background-color: #e74c3c; /* Red color */
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 18px;
-            transition: background-color 0.3s ease;
-        }
-        button:hover {
-            background-color: #c0392b;
-        }
-        #statusMessage {
-            margin-top: 20px;
-            padding: 10px;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .info {
-            background-color: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Send SMS (Demo)</title>
+  <style>
+    body { font-family: sans-serif; display:flex; justify-content:center; align-items:center; min-height:100vh; margin:0; background:#f4f4f4; }
+    .container { background:#fff; padding:30px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,.1); width:90%; max-width:500px; text-align:left; }
+    h1 { margin:0 0 12px 0; color:#333; }
+    .form-group { margin-bottom:16px; }
+    label { display:block; margin-bottom:6px; font-weight:600; color:#555; }
+    input[type="text"], input[type="number"] { width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; font-size:16px; box-sizing:border-box; }
+    button { background:#e74c3c; color:#fff; padding:12px 18px; border:none; border-radius:6px; font-size:16px; cursor:pointer; }
+    button[disabled] { opacity:.6; cursor:not-allowed; }
+    #statusMessage { margin-top:14px; padding:10px; border-radius:6px; font-weight:600; display:none; }
+    .success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; display:block; }
+    .error { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; display:block; }
+    .info { background:#d1ecf1; color:#0c5460; border:1px solid #bee5eb; display:block; }
+    .consent { display:flex; align-items:center; gap:8px; }
+    small { color:#666; display:block; margin-top:6px; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Toshi's Bomb API</h1>
-        <p>Initiate a bomb attack (use responsibly!)</p>
+  <div class="container">
+    <h1>Send SMS (Demo)</h1>
+    <p><small>This form sends a single SMS request through your server proxy. Use responsibly and only with the recipient's consent.</small></p>
 
-        <div class="form-group">
-            <label for="phoneNumber">Phone Number:</label>
-            <input type="text" id="phoneNumber" placeholder="e.g., 09876543210">
-        </div>
-
-        <div class="form-group">
-            <label for="totalRequests">Total Requests:</label>
-            <input type="number" id="totalRequests" value="50" min="1">
-        </div>
-
-        <button id="startButton">Start Bomb</button>
-
-        <div id="statusMessage"></div>
+    <div class="form-group">
+      <label for="phoneNumber">Phone number</label>
+      <input id="phoneNumber" type="text" placeholder="e.g., 09876543210" inputmode="numeric" />
     </div>
 
-    <script>
-        const API_URL = '';
-        // !!! IMPORTANT: NEVER expose your API key like this in a real application !!!
-        // This is for demonstration purposes only.
-        const API_KEY = 'toshi_5keziigugz9_mhrn03ld';
+    <div class="form-group">
+      <label for="amount">Number of messages (max 1)</label>
+      <input id="amount" type="number" value="1" min="1" max="1" />
+    </div>
 
-        const phoneNumberInput = document.getElementById('phoneNumber');
-        const totalRequestsInput = document.getElementById('totalRequests');
-        const startButton = document.getElementById('startButton');
-        const statusMessageDiv = document.getElementById('statusMessage');
+    <div class="form-group consent">
+      <input id="consent" type="checkbox" />
+      <label for="consent" style="margin:0; font-weight:normal;">I have the recipient's explicit consent to send this message</label>
+    </div>
 
-        startButton.addEventListener('click', async () => {
-            const phoneNumber = phoneNumberInput.value.trim();
-            const totalRequests = parseInt(totalRequestsInput.value, 10);
+    <button id="startButton">Send SMS</button>
 
-            if (!phoneNumber) {
-                displayStatusMessage('Please enter a phone number.', 'error');
-                return;
-            }
-            if (isNaN(totalRequests) || totalRequests <= 0) {
-                displayStatusMessage('Please enter a valid number of requests (greater than 0).', 'error');
-                return;
-            }
+    <div id="statusMessage"></div>
+  </div>
 
-            // Basic phone number format validation (can be more robust)
-            if (!/^\d+$/.test(phoneNumber)) {
-                displayStatusMessage('Phone number should contain only digits.', 'error');
-                return;
-            }
+  <script>
+    const phoneNumberInput = document.getElementById('phoneNumber');
+    const amountInput = document.getElementById('amount');
+    const consentCheckbox = document.getElementById('consent');
+    const startButton = document.getElementById('startButton');
+    const statusMessageDiv = document.getElementById('statusMessage');
 
+    function showStatus(text, type='info') {
+      statusMessageDiv.textContent = text;
+      statusMessageDiv.className = ''; // reset
+      statusMessageDiv.classList.add(type);
+      statusMessageDiv.style.display = 'block';
+    }
 
-            displayStatusMessage('Initiating bomb attack...', 'info');
-            startButton.disabled = true; // Disable button while request is in progress
+    startButton.addEventListener('click', async () => {
+      const phoneNumber = phoneNumberInput.value.trim();
+      const amount = parseInt(amountInput.value, 10);
 
-            try {
-                const response = await fetch('api/send-sms, {
-                    method: 'POST',
-                    headers: {
-                        'x-api-key': API_KEY,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        phoneNumber: phoneNumber,
-                        totalRequests: totalRequests
-                    })
-                });
+      if (!phoneNumber) { showStatus('Please enter a phone number.', 'error'); return; }
+      if (!/^\d+$/.test(phoneNumber)) { showStatus('Phone number must contain only digits.', 'error'); return; }
+      if (isNaN(amount) || amount < 1 || amount > 1) { showStatus('Amount must be 1 (demo limit).', 'error'); return; }
+      if (!consentCheckbox.checked) { showStatus("You must confirm the recipient's consent.", 'error'); return; }
 
-                const data = await response.json(); // Assuming the API returns JSON
+      startButton.disabled = true;
+      showStatus('Sending request...', 'info');
 
-                if (response.ok) {
-                    displayStatusMessage(`Bomb attack initiated successfully! Response: ${JSON.stringify(data)}`, 'success');
-                } else {
-                    // Handle API errors
-                    const errorMessage = data.message || `An error occurred: ${response.status} ${response.statusText}`;
-                    displayStatusMessage(`Error: ${errorMessage}`, 'error');
-                }
-            } catch (error) {
-                // Handle network errors or other exceptions
-                displayStatusMessage(`Network error: ${error.message}`, 'error');
-            } finally {
-                startButton.disabled = false; // Re-enable the button
-            }
+      try {
+        // Use your server-side proxy route (no API key in client).
+        const res = await fetch('/api/send-sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phoneNumber, amount })
         });
 
-        function displayStatusMessage(message, type) {
-            statusMessageDiv.textContent = message;
-            statusMessageDiv.className = ''; // Clear previous classes
-            statusMessageDiv.classList.add(type); // Add new type class
+        const body = await res.json();
+        if (res.ok) {
+          showStatus('Message request accepted: ' + (body.message || JSON.stringify(body)), 'success');
+        } else {
+          showStatus('Server error: ' + (body.error || body.message || res.statusText), 'error');
         }
-    </script>
+      } catch (err) {
+        showStatus('Network error: ' + err.message, 'error');
+      } finally {
+        startButton.disabled = false;
+      }
+    });
+  </script>
 </body>
 </html>
