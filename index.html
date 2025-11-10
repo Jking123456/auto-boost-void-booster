@@ -103,7 +103,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://api.cors.lol/?url=https://toshismsbombapi.up.railway.app/api/bomb/start';
+        const API_URL = '';
         // !!! IMPORTANT: NEVER expose your API key like this in a real application !!!
         // This is for demonstration purposes only.
         const API_KEY = 'toshi_5keziigugz9_mhrn03ld';
@@ -137,7 +137,7 @@
             startButton.disabled = true; // Disable button while request is in progress
 
             try {
-                const response = await fetch(API_URL, {
+                const response = await fetch('api/send-sms, {
                     method: 'POST',
                     headers: {
                         'x-api-key': API_KEY,
