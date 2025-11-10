@@ -5,40 +5,110 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Send SMS (Demo)</title>
   <style>
-    body { font-family: sans-serif; display:flex; justify-content:center; align-items:center; min-height:100vh; margin:0; background:#f4f4f4; }
-    .container { background:#fff; padding:30px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,.1); width:90%; max-width:500px; text-align:left; }
-    h1 { margin:0 0 12px 0; color:#333; }
-    .form-group { margin-bottom:16px; }
-    label { display:block; margin-bottom:6px; font-weight:600; color:#555; }
-    input[type="text"], input[type="number"] { width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; font-size:16px; box-sizing:border-box; }
-    button { background:#e74c3c; color:#fff; padding:12px 18px; border:none; border-radius:6px; font-size:16px; cursor:pointer; }
-    button[disabled] { opacity:.6; cursor:not-allowed; }
-    #statusMessage { margin-top:14px; padding:10px; border-radius:6px; font-weight:600; display:none; }
-    .success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; display:block; }
-    .error { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; display:block; }
-    .info { background:#d1ecf1; color:#0c5460; border:1px solid #bee5eb; display:block; }
-    .consent { display:flex; align-items:center; gap:8px; }
-    small { color:#666; display:block; margin-top:6px; }
+    body {
+      font-family: system-ui, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #f0f0f0, #dfe9f3);
+    }
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 500px;
+      text-align: left;
+      transition: all 0.3s ease;
+    }
+    h1 {
+      margin: 0 0 12px;
+      color: #2c3e50;
+    }
+    .form-group { margin-bottom: 18px; }
+    label { display: block; margin-bottom: 6px; font-weight: 600; color: #555; }
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    input:focus {
+      border-color: #3498db;
+      outline: none;
+    }
+    button {
+      background: #3498db;
+      color: #fff;
+      padding: 12px 18px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+    }
+    button:hover:not(:disabled) {
+      background: #2980b9;
+      transform: scale(1.02);
+    }
+    button[disabled] {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #statusMessage {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    #statusMessage.show { opacity: 1; }
+    .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    .consent { display: flex; align-items: center; gap: 8px; }
+    small { color: #666; display: block; margin-top: 6px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Send SMS (Demo)</h1>
-    <p><small>This form sends a single SMS request through your server proxy. Use responsibly and only with the recipient's consent.</small></p>
+    <h1>📩 Send SMS (Demo)</h1>
+    <p><small>Use responsibly and only with the recipient’s explicit consent.</small></p>
 
     <div class="form-group">
-      <label for="phoneNumber">Phone number</label>
+      <label for="phoneNumber">📱 Phone number</label>
       <input id="phoneNumber" type="text" placeholder="e.g., 09876543210" inputmode="numeric" />
     </div>
 
     <div class="form-group">
       <label for="amount">Number of messages (max 1)</label>
-      <input id="amount" type="number" value="50" min="50" max="50" />
+      <input id="amount" type="number" value="1" min="1" max="1" />
     </div>
 
     <div class="form-group consent">
       <input id="consent" type="checkbox" />
-      <label for="consent" style="margin:0; font-weight:normal;">I have the recipient's explicit consent to send this message</label>
+      <label for="consent" style="margin:0; font-weight:normal;">I confirm the recipient has consented.</label>
     </div>
 
     <button id="startButton">Send SMS</button>
@@ -53,27 +123,26 @@
     const startButton = document.getElementById('startButton');
     const statusMessageDiv = document.getElementById('statusMessage');
 
-    function showStatus(text, type='info') {
+    function showStatus(text, type = 'info') {
       statusMessageDiv.textContent = text;
-      statusMessageDiv.className = ''; // reset
-      statusMessageDiv.classList.add(type);
-      statusMessageDiv.style.display = 'block';
+      statusMessageDiv.className = '';
+      statusMessageDiv.classList.add(type, 'show');
     }
 
     startButton.addEventListener('click', async () => {
       const phoneNumber = phoneNumberInput.value.trim();
       const amount = parseInt(amountInput.value, 10);
 
-      if (!phoneNumber) { showStatus('Please enter a phone number.', 'error'); return; }
-      if (!/^\d+$/.test(phoneNumber)) { showStatus('Phone number must contain only digits.', 'error'); return; }
-      if (isNaN(amount) || amount < 50 || amount > 50) { showStatus('Amount must be 50.', 'error'); return; }
-      if (!consentCheckbox.checked) { showStatus("You must confirm the recipient's consent.", 'error'); return; }
+      if (!phoneNumber) return showStatus('❗ Please enter a phone number.', 'error');
+      if (!/^[0-9]+$/.test(phoneNumber)) return showStatus('❗ Phone number must contain only digits.', 'error');
+      if (isNaN(amount) || amount < 1 || amount > 1) return showStatus('❗ Amount must be 1 (demo limit).', 'error');
+      if (!consentCheckbox.checked) return showStatus('❗ You must confirm consent.', 'error');
 
       startButton.disabled = true;
-      showStatus('Sending request...', 'info');
+      startButton.innerHTML = '<div class="spinner"></div> Sending...';
+      showStatus('⏳ Sending request...', 'info');
 
       try {
-        // Use your server-side proxy route (no API key in client).
         const res = await fetch('/api/send-sms', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -82,14 +151,15 @@
 
         const body = await res.json();
         if (res.ok) {
-          showStatus('Message request accepted: ' + (body.message || JSON.stringify(body)), 'success');
+          showStatus('✅ ' + (body.message || 'Message sent successfully!'), 'success');
         } else {
-          showStatus('Server error: ' + (body.error || body.message || res.statusText), 'error');
+          showStatus('❌ ' + (body.error || body.message || res.statusText), 'error');
         }
       } catch (err) {
-        showStatus('Network error: ' + err.message, 'error');
+        showStatus('🚨 Network error: ' + err.message, 'error');
       } finally {
         startButton.disabled = false;
+        startButton.textContent = 'Send SMS';
       }
     });
   </script>
