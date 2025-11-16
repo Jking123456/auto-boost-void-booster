@@ -14,7 +14,7 @@ export default async function handler(req, res) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": "toshi_5keziigugz9_mhrn03ld",
+        "x-api-key": "toshi_8qkczdpyos8_mi1hfcay",
       },
       // ✅ Changed keys to match what the API likely expects
       body: JSON.stringify({
