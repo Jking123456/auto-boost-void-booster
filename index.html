@@ -3,46 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Void Booster Dashboard</title>
+    <title>Void Booster | Live Monitor</title>
     <style>
-        body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background: #111; padding: 2rem; border-radius: 15px; border: 1px solid #333; text-align: center; width: 90%; max-width: 400px; }
-        h1 { font-size: 1.5rem; margin-bottom: 0.5rem; color: #0070f3; }
-        .status-box { background: #1a1a1a; padding: 15px; border-radius: 8px; margin: 20px 0; font-family: monospace; font-size: 0.9rem; border: 1px solid #222; }
-        .btn { background: #fff; color: #000; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 10px; transition: 0.2s; }
-        .btn:hover { background: #ccc; }
-        .live-indicator { display: inline-block; width: 10px; height: 10px; background: #00ff00; border-radius: 50%; margin-right: 5px; animation: blink 1s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        :root { --bg: #0a0a0c; --card: #16161a; --primary: #3b82f6; --success: #10b981; --error: #ef4444; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .dashboard { background: var(--card); border: 1px solid #2d2d35; padding: 2rem; border-radius: 20px; width: 100%; max-width: 450px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--success); box-shadow: 0 0 10px var(--success); animation: pulse 2s infinite; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: #1f1f23; padding: 15px; border-radius: 12px; text-align: left; }
+        .stat-label { color: #888; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 1.1rem; font-weight: 600; margin-top: 5px; }
+        #log-box { background: #000; padding: 15px; border-radius: 10px; font-family: 'Fira Code', monospace; font-size: 0.85rem; border: 1px solid #333; min-height: 60px; color: #aaa; text-align: left; overflow-wrap: break-word; }
+        .btn { display: block; width: 100%; background: white; color: black; text-align: center; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: 700; margin-top: 20px; transition: 0.3s; }
+        .btn:hover { transform: translateY(-2px); opacity: 0.9; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="live-indicator"></div> <span>System Active</span>
-        <h1>Void Booster</h1>
-        <p style="color: #888;">Cron Job: 1 Minute Interval</p>
-        
-        <div class="status-box" id="status-text">
-            Fetching latest status...
+    <div class="dashboard">
+        <div class="header">
+            <h2 style="margin:0;">Void Booster <span style="font-weight: 300; font-size: 0.8rem; color: #555;">v2.0</span></h2>
+            <div class="status-dot" id="dot"></div>
         </div>
 
-        <a href="/api/boost" target="_blank" class="btn">Test API Now</a>
-        <p style="font-size: 0.7rem; color: #444; margin-top: 20px;">Check Vercel Deployment Logs for full history.</p>
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-label">Automation</div>
+                <div class="stat-value" style="color: var(--success);">Every 2m</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Next Check</div>
+                <div class="stat-value" id="timer">02:00</div>
+            </div>
+        </div>
+
+        <div class="stat-label" style="margin-bottom: 8px;">Latest Server Response</div>
+        <div id="log-box">Initializing monitoring system...</div>
+
+        <a href="/api/boost" target="_blank" class="btn">Force Manual Boost</a>
+        
+        <p style="font-size: 0.7rem; color: #444; margin-top: 15px;">Repo Status: Private • Deployment: Vercel</p>
     </div>
 
     <script>
-        async function updateStatus() {
+        let timeLeft = 120; // 2 minutes
+
+        async function fetchStatus() {
+            const logBox = document.getElementById('log-box');
+            const dot = document.getElementById('dot');
             try {
                 const res = await fetch('/api/boost');
                 const data = await res.json();
-                const msg = data.server_data?.message || data.error || "Cooldown Active";
-                document.getElementById('status-text').innerText = "LATEST: " + msg;
-                document.getElementById('status-text').style.color = data.success ? "#00ff00" : "#ff4d4d";
+                
+                const msg = data.server_data?.message || data.error || "System Cooldown";
+                logBox.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+                
+                if (data.success) {
+                    dot.style.background = 'var(--success)';
+                    dot.style.boxShadow = '0 0 10px var(--success)';
+                } else {
+                    dot.style.background = 'var(--error)';
+                    dot.style.boxShadow = '0 0 10px var(--error)';
+                }
             } catch (e) {
-                document.getElementById('status-text').innerText = "Server busy or Cooldown";
+                logBox.innerText = "[ERROR] Could not connect to API";
             }
+            timeLeft = 120; // Reset timer after check
         }
-        updateStatus();
-        setInterval(updateStatus, 30000); // Auto refresh every 30s
+
+        // Countdown Timer Logic
+        setInterval(() => {
+            timeLeft--;
+            if (timeLeft <= 0) {
+                fetchStatus();
+            }
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            document.getElementById('timer').innerText = 
+                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }, 1000);
+
+        // Initial fetch
+        fetchStatus();
     </script>
 </body>
 </html>
