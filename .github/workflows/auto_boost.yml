@@ -1,29 +1,58 @@
-name: 24-7 Auto Boost
+name: 24-7 Auto Boost (Telegram Sniper)
 on:
   schedule:
     - cron: '*/15 * * * *' # Triggers every 15 minutes
-  workflow_dispatch:      # Allows you to test it manually
+  workflow_dispatch:      # Manual trigger button
 
 jobs:
   boost_job:
     runs-on: ubuntu-latest
     steps:
-      - name: Binding and Boosting
+      - name: Rapid Fire Sniping
         run: |
-          # Step 1: Bind Device
-          curl -X POST "https://emmrerremmbnrxyutunp.supabase.co/rest/v1/rpc/bind_device_to_key" \
-          -H "apikey: ${{ secrets.ANON_KEY }}" \
-          -H "Authorization: Bearer ${{ secrets.ANON_KEY }}" \
-          -H "Content-Type: application/json" \
-          -d '{"p_key": "VOID-FBOA-SEIK-FAZR-D92E", "p_device_id": "DEV-6a0e5559-0ea9-44f7-bba7-c9545175ece2"}'
+          # The loop runs for 14 minutes to avoid overlapping with the next cron job
+          for i in {1..56}
+          do
+            echo "Attempt $i at $(date)"
+            
+            # Generate a completely unique device ID for every 15-second strike
+            DEV_ID="DEV-$(uuidgen | cut -c1-8)"
+            
+            # Step 1: Bind the fake device to the key
+            curl -s -X POST "https://emmrerremmbnrxyutunp.supabase.co/rest/v1/rpc/bind_device_to_key" \
+            -H "apikey: ${{ secrets.ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.ANON_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"p_key\": \"VOID-FBOA-SEIK-FAZR-D92E\", \"p_device_id\": \"$DEV_ID\"}"
 
-          # Step 2: Trigger Boost
-          curl -G "https://emmrerremmbnrxyutunp.supabase.co/functions/v1/boost-proxy" \
-          -H "apikey: ${{ secrets.ANON_KEY }}" \
-          -H "Authorization: Bearer ${{ secrets.ANON_KEY }}" \
-          --data-urlencode "action=start" \
-          --data-urlencode "url=https://www.facebook.com/profile.php?id=61583017822517" \
-          --data-urlencode "type=facebook_followers" \
-          --data-urlencode "count=100" \
-          --data-urlencode "device_id=DEV-6a0e5559-0ea9-44f7-bba7-c9545175ece2"
+            # Step 2: Send the Boost Request
+            RESPONSE=$(curl -s -G "https://emmrerremmbnrxyutunp.supabase.co/functions/v1/boost-proxy" \
+            -H "apikey: ${{ secrets.ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.ANON_KEY }}" \
+            --data-urlencode "action=start" \
+            --data-urlencode "url=https://www.facebook.com/profile.php?id=61583017822517" \
+            --data-urlencode "type=facebook_followers" \
+            --data-urlencode "count=100" \
+            --data-urlencode "device_id=$DEV_ID")
+
+            echo "Server Response: $RESPONSE"
+
+            # Step 3: Check for Success and Notify Telegram
+            if [[ "$RESPONSE" == *"success"* ]]; then
+              echo "🎯 Success detected!"
+              
+              MESSAGE="✅ *VOID SUCCESS* %0A🎯 Target: FB Profile %0A📦 Status: 100 Followers Sent %0A⏰ Time: $(date +'%H:%M:%S')"
+              
+              curl -s -X POST "https://api.telegram.org/bot8521438428:AAGWw_ER6sCX8NgrNk6gyhi5BOzSxghdl-U/sendMessage" \
+              -d "chat_id=7572824079" \
+              -d "text=$MESSAGE" \
+              -d "parse_mode=Markdown"
+              
+              # Break the loop so we don't spam after winning
+              break
+            fi
+
+            # Wait 15 seconds before the next attempt
+            sleep 15
+          done
           
